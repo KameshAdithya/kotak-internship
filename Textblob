@@ -1,0 +1,16 @@
+import pandas as pd
+from textblob import TextBlob
+# Load the Excel file into a pandas dataframe
+df = pd.read_excel('Final_2.xlsx')
+# Define a function to perform sentiment analysis using TextBlob
+def get_sentiment(text):
+    if isinstance(text, str):
+        blob = TextBlob(text)
+        sentiment = blob.sentiment.polarity
+        sentiment = ((sentiment + 1) / 2) * 9 + 1
+        return sentiment
+    else:
+        return None
+# Apply the sentiment analysis function to all comments in the dataframe
+df['Textblob'] = df['wnw'].apply(get_sentiment)
+df.to_excel('Final_2.xlsx')  # Update with your desired file name

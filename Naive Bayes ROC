@@ -1,0 +1,43 @@
+import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve, auc
+from sklearn.multiclass import OneVsRestClassifier
+from sklearn.preprocessing import label_binarize
+
+# Convert sentiment labels to binary format
+binarized_labels = label_binarize(test_data["Sentiment"], classes=["Negative", "Neutral", "Positive"])
+
+# Create an instance of the One-vs-Rest classifier with Naive Bayes as the base estimator
+ovr_classifier = OneVsRestClassifier(MultinomialNB())
+
+# Fit the classifier on the training comments and binarized labels
+ovr_classifier.fit(train_comments, label_binarize(train_data["Sentiment"], classes=["Negative", "Neutral", "Positive"]))
+
+# Predict probabilities for each class
+predicted_probabilities = ovr_classifier.predict_proba(test_comments)
+
+# Compute the ROC curve and AUC for each class
+fpr = dict()
+tpr = dict()
+roc_auc = dict()
+
+# Number of classes
+n_classes = binarized_labels.shape[1]
+
+# Iterate over each class
+for i in range(n_classes):
+    fpr[i], tpr[i], _ = roc_curve(binarized_labels[:, i], predicted_probabilities[:, i])
+    roc_auc[i] = auc(fpr[i], tpr[i])
+
+# Plot the ROC curves for each class
+plt.figure(figsize=(10, 6))
+for i in range(n_classes):
+    plt.plot(fpr[i], tpr[i], label='ROC curve (area = %0.2f) for class %s' % (roc_auc[i], ["Negative", "Neutral", "Positive"][i]))
+
+plt.plot([0, 1], [0, 1], 'k--')  # Plot the diagonal line for reference
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('One-vs-Rest ROC Curve')
+plt.legend(loc="lower right")
+plt.show()

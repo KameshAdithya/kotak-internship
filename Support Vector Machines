@@ -1,0 +1,74 @@
+import numpy as np # linear algebra
+import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+import seaborn as sns
+import matplotlib.pyplot as plt
+import re
+import nltk
+%matplotlib inline
+df = pd.read_excel('Final.xlsx')
+df = df.dropna()
+from sklearn.model_selection import train_test_split
+
+features = df["wnw"]
+labels = df["Sentiment"]
+
+X_train, X_test, y_train, y_test = train_test_split(
+    features, labels, test_size=0.3, random_state=42
+)
+
+print(
+    "Data distribution:\n- Train: {} \n- Test: {}".format(
+        len(X_train), len(X_test)
+    )
+)
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+# Step 1: Create an instance of the TF-IDF vectorizer with desired parameters
+tfidf_vectorizer = TfidfVectorizer(max_df=0.8, min_df=5, stop_words='english')
+
+# Step 2: Fit the vectorizer on the training data to learn the vocabulary
+tfidf_vectorizer.fit(X_train)
+
+# Step 3: Transform the training and testing data into TF-IDF feature matrices
+X_train_tfidf = tfidf_vectorizer.transform(X_train)
+X_test_tfidf = tfidf_vectorizer.transform(X_test)
+import time
+from sklearn import svm
+from sklearn.metrics import classification_report
+# Perform classification with SVM, kernel=linear
+classifier_linear = svm.SVC(kernel='linear')
+t0 = time.time()
+classifier_linear.fit(X_train_tfidf, y_train)
+t1 = time.time()
+prediction_linear = classifier_linear.predict(X_test_tfidf)
+t2 = time.time()
+time_linear_train = t1-t0
+time_linear_predict = t2-t1
+# results
+print("Training time: %fs; Prediction time: %fs" % (time_linear_train, time_linear_predict))
+report = classification_report(y_test, prediction_linear, output_dict=True)
+print('Positive: ', report['Positive'])
+print('Neutral: ', report['Neutral'])
+print('Negative: ', report['Negative'])
+from sklearn.model_selection import GridSearchCV
+from sklearn.pipeline import Pipeline
+
+# Define a pipeline that includes the vectorizer and the SVM classifier
+pipeline = Pipeline([
+    ('tfidf', TfidfVectorizer()),
+    ('svm', svm.SVC(kernel='rbf'))
+])
+
+# Define a grid of hyperparameter values to search over
+param_grid = {
+    'svm__C': [0.1, 1, 10],
+    'svm__gamma': [0.1, 1, 10]
+}
+
+# Perform grid search with 5-fold cross-validation
+grid_search = GridSearchCV(pipeline, param_grid, cv=5, n_jobs=-1, verbose=1)
+grid_search.fit(X_train, y_train)
+
+# Print the best hyperparameters and the validation score
+print("Best parameters:", grid_search.best_params_)
+print("Validation score:", grid_search.best_score_)

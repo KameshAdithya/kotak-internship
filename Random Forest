@@ -1,0 +1,62 @@
+import numpy as np # linear algebra
+import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+import seaborn as sns
+import matplotlib.pyplot as plt
+import re
+import nltk
+%matplotlib inline
+df = pd.read_excel('Final.xlsx')
+df = df.dropna()
+from sklearn.model_selection import train_test_split
+
+features = df["wnw"]
+labels = df["Sentiment"]
+
+X_train, X_test, y_train, y_test = train_test_split(
+    features, labels, test_size=0.3, random_state=42
+)
+
+print(
+    "Data distribution:\n- Train: {} \n- Test: {}".format(
+        len(X_train), len(X_test)
+    )
+)
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+def vectorize(data,tfidf_vect_fit):
+    X_tfidf = tfidf_vect_fit.transform(data)
+    words = tfidf_vect_fit.get_feature_names()
+    X_tfidf_df = pd.DataFrame(X_tfidf.toarray())
+    X_tfidf_df.columns = words
+    return(X_tfidf_df)
+tfidf_vect = TfidfVectorizer()
+tfidf_vect_fit = tfidf_vect.fit(X_train)
+X_train_v = tfidf_vect_fit.transform(X_train)
+X_test_v = tfidf_vect_fit.transform(X_test)
+y_train_v = tfidf_vect_fit.transform(y_train)
+y_test_v = tfidf_vect_fit.transform(y_test)
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import cross_val_score
+
+rf = RandomForestClassifier()
+scores = cross_val_score(rf,X_train_v,y_train.values.ravel(),cv=5)
+print(scores)
+scores.mean()
+def print_results(results):
+    print('BEST PARAMS: {}\n'.format(results.best_params_))
+
+    means = results.cv_results_['mean_test_score']
+    stds = results.cv_results_['std_test_score']
+    for mean, std, params in zip(means, stds, results.cv_results_['params']):
+        print('{} (+/-{}) for {}'.format(round(mean, 3), round(std * 2, 3), params))
+from sklearn.model_selection import GridSearchCV
+
+rf = RandomForestClassifier()
+parameters = {
+    'n_estimators': [5,50,250],
+    'max_depth': [2,10,20,None]
+}
+
+cv = GridSearchCV(rf,parameters)
+cv.fit(X_train_v,y_train.values.ravel())
+print_results(cv)

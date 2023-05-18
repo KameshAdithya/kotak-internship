@@ -1,0 +1,37 @@
+from sklearn.metrics import roc_curve, auc
+rf.fit(X_train_v, y_train)
+from sklearn.metrics import roc_curve, auc
+from sklearn.preprocessing import label_binarize
+from itertools import cycle
+# Convert multiclass labels into a binary matrix
+y_test_bin = label_binarize(y_test, classes=np.unique(y_test))
+y_pred_proba = rf.predict_proba(X_test_v)
+
+# Compute the false positive rate and true positive rate for each class
+fpr = dict()
+tpr = dict()
+roc_auc = dict()
+n_classes = y_test_bin.shape[1]
+
+for i in range(n_classes):
+    fpr[i], tpr[i], _ = roc_curve(y_test_bin[:, i], y_pred_proba[:, i])
+    roc_auc[i] = auc(fpr[i], tpr[i])
+
+# Plot the ROC curves for each class
+plt.figure(figsize=(8, 6))
+
+colors = cycle(['red', 'blue', 'green'])  # Add more colors if needed
+classes = ['Negative', 'Neutral', 'Positive']  # Modify class labels accordingly
+
+for i, color, class_label in zip(range(n_classes), colors, classes):
+    plt.plot(fpr[i], tpr[i], color=color, lw=2, label='ROC curve of {} (AUC = {:.2f})'.format(class_label, roc_auc[i]))
+
+plt.plot([0, 1], [0, 1], color='gray', lw=1, linestyle='--')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('One-vs-Rest ROC Curves')
+plt.legend(loc="lower right")
+plt.show()
+

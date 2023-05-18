@@ -1,0 +1,38 @@
+from sklearn.metrics import roc_curve, auc
+from sklearn.multiclass import OneVsRestClassifier
+
+# Create an instance of the One-vs-Rest classifier with SVM as the base estimator
+classifier_ovr = OneVsRestClassifier(svm.SVC(kernel='linear', probability=True))
+
+# Fit the classifier on the training data
+classifier_ovr.fit(X_train_tfidf, y_train)
+
+# Predict probabilities for each class
+y_scores = classifier_ovr.decision_function(X_test_tfidf)
+
+# Compute the ROC curve and AUC for each class
+fpr = dict()
+tpr = dict()
+roc_auc = dict()
+
+# Number of classes
+n_classes = len(classifier_ovr.classes_)
+
+# Iterate over each class
+for i in range(n_classes):
+    fpr[i], tpr[i], _ = roc_curve(y_test == classifier_ovr.classes_[i], y_scores[:, i])
+    roc_auc[i] = auc(fpr[i], tpr[i])
+
+# Plot the ROC curves for each class
+plt.figure(figsize=(10, 6))
+for i in range(n_classes):
+    plt.plot(fpr[i], tpr[i], label='ROC curve (area = %0.2f) for class %s' % (roc_auc[i], classifier_ovr.classes_[i]))
+
+plt.plot([0, 1], [0, 1], 'k--')  # Plot the diagonal line for reference
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('One-vs-Rest ROC Curve')
+plt.legend(loc="lower right")
+plt.show()

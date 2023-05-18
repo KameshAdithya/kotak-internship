@@ -1,0 +1,32 @@
+import pandas as pd
+import nltk
+nltk.download('vader_lexicon')
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+
+# Initialize the sentiment analyzer
+sid = SentimentIntensityAnalyzer()
+
+# Load data from Excel
+
+df = pd.read_excel('Final_2.xlsx')  # Update with your file path
+
+
+# Define a function to perform sentiment analysis and return scores on a scale of 1-10
+def perform_sentiment_analysis(text):
+    """
+    Perform sentiment analysis on input text and return sentiment scores on a scale of 1-10
+    """
+    text = str(text)
+    # Perform sentiment analysis using the VADER sentiment analyzer
+    scores = sid.polarity_scores(text)
+    compound_score = scores['compound']
+
+    # Convert compound score to a scale of 1-10
+    sentiment_score = ((compound_score + 1) / 2) * 9 + 1
+
+    return sentiment_score
+
+
+# Add a new column to the DataFrame to store sentiment scores
+df['VADER'] = df['wnw'].apply(perform_sentiment_analysis)
+df.to_excel('Final_2.xlsx')
