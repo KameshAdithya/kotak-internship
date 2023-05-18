@@ -1,0 +1,18 @@
+from sklearn.metrics import confusion_matrix
+
+# Train the Random Forest classifier
+rf.fit(X_train_v, y_train.values.ravel())
+
+# Predict the labels for the test data
+prediction_rf = rf.predict(X_test_v)
+
+# Generate the confusion matrix
+cm = confusion_matrix(y_test, prediction_rf)
+
+# Plot the confusion matrix as a heatmap
+plt.figure(figsize=(8, 6))
+sns.heatmap(cm, annot=True, fmt="d", cmap="Blues", cbar=False)
+plt.title("Confusion Matrix")
+plt.xlabel("Predicted Label")
+plt.ylabel("True Label")
+plt.show()
